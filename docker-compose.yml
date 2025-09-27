@@ -1,0 +1,21 @@
+services:
+  app:
+    image: otel-kotlin-api-usage-with-spring-starter
+    environment:
+      OTEL_SERVICE_NAME: "otel-kotlin-zero-code-instrumentation-practice"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4318"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - collector
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.136.0@sha256:45392d534c1edcc809c2d112394029246bc679d2ae5ea7081414a1fc74f2c621
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /config.yaml
+    command: ["--config=/config.yaml"]
+    # expose:
+    #   - "4317"
+    # ports:
+    #   - "4317:4317"
