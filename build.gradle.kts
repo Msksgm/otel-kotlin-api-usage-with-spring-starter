@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
 plugins {
 	kotlin("jvm") version "1.9.25"
 	kotlin("plugin.spring") version "1.9.25"
@@ -26,6 +28,12 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	// otel まわりで必要なパッケージ
+	implementation(platform(SpringBootPlugin.BOM_COORDINATES))
+	implementation(platform("io.opentelemetry:opentelemetry-bom:1.44.0"))
+	implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.10.0"))
+	implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
 }
 
 kotlin {
