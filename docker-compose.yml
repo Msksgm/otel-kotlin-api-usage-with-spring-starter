@@ -1,11 +1,31 @@
 services:
+  nginx:
+    image: nginx:1.27-bookworm-otel
+    ports:
+      - "${PUBLIC_PORT:-8080}:80"
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      OTLP_ENDPOINT: "http://collector:4317"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - type: bind
+        source: ${PWD}/nginx/nginx.conf.template
+        target: /etc/nginx/nginx.conf.template
+      - type: bind
+        source: ${PWD}/nginx/docker-entrypoint.sh
+        target: /docker-entrypoint.sh
+      - type: bind
+        source: ${PWD}/nginx/conf.d
+        target: /etc/nginx/conf.d
+    entrypoint: /docker-entrypoint.sh
   app:
     image: otel-kotlin-api-usage-with-spring-starter
     environment:
       OTEL_SERVICE_NAME: "otel-kotlin-zero-code-instrumentation-practice"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4318"
-    ports:
-      - "8080:8080"
     depends_on:
       - collector
   collector:
