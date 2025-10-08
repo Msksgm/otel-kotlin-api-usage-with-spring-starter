@@ -85,4 +85,57 @@ class Controller {
         ContextUsage.contextUsage()
         return "context-service-demo"
     }
+
+    @GetMapping("/inject-context-demo")
+    fun injectContextDemo(): Map<String, String> {
+        val span = tracer.spanBuilder("inject-context-demo").startSpan()
+
+        try {
+            span.makeCurrent().use {
+                // バゲージを設定
+                val baggage = io.opentelemetry.api.baggage.Baggage.builder()
+                    .put("user.id", "user-456")
+                    .put("request.id", "req-789")
+                    .build()
+
+                // バゲージをコンテキストに追加
+                baggage.makeCurrent().use {
+                    // InjectContextUsageを呼び出し
+                    InjectContextUsage.injectContextUsage()
+
+                    return mapOf(
+                        "message" to "Context injection demonstration",
+                        "traceId" to span.spanContext.traceId,
+                        "userId" to (baggage.getEntryValue("user.id") ?: "not set")
+                    )
+                }
+            }
+        } finally {
+            span.end()
+        }
+    }
+
+    @GetMapping("/resource")
+    fun resource(): Map<String, String> {
+        val currentSpan = Span.current()
+        val baggage = io.opentelemetry.api.baggage.Baggage.current()
+
+        // 受け取ったトレース情報とバゲージを表示
+        val userId = baggage.getEntryValue("user.id")
+        val requestId = baggage.getEntryValue("request.id")
+
+        println("=== /resource endpoint ===")
+        println("TraceId: ${currentSpan.spanContext.traceId}")
+        println("SpanId: ${currentSpan.spanContext.spanId}")
+        println("Baggage - user.id: $userId")
+        println("Baggage - request.id: $requestId")
+
+        return mapOf(
+            "message" to "Resource endpoint",
+            "traceId" to currentSpan.spanContext.traceId,
+            "spanId" to currentSpan.spanContext.spanId,
+            "userId" to (userId ?: "not received"),
+            "requestId" to (requestId ?: "not received")
+        )
+    }
 }
